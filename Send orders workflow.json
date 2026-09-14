@@ -1,0 +1,529 @@
+{
+  "name": "Send orders workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -208
+      ],
+      "id": "2c329693-24b4-4f3b-b0f6-9c55fd3b16d4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://dummyjson.com/carts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        -208
+      ],
+      "id": "bdbf4dad-261d-4255-896c-9c12acf9d3aa",
+      "name": "02 - Get  Orders"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "carts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -208
+      ],
+      "id": "a0dce4c9-3447-4d98-8575-804bd7d47c3f",
+      "name": "03 - Split Orders"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1c07a660-16bd-48dc-bf86-bfa5f0e2eaa7",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "69c00fd4-d213-4544-a7ea-435b0c6fa0b0",
+              "name": "userId",
+              "value": "={{ $json.userId }}",
+              "type": "number"
+            },
+            {
+              "id": "734d6bd5-3afb-49b4-8962-5d38b25a18c5",
+              "name": "total",
+              "value": "={{ $json.total }}",
+              "type": "number"
+            },
+            {
+              "id": "3f7aa022-993c-46ae-b3a4-f2a612dba665",
+              "name": "totalQuantity",
+              "value": "={{ $json.totalQuantity }}",
+              "type": "number"
+            },
+            {
+              "id": "455802d3-8e05-46df-a76a-d26f51c948da",
+              "name": "totalProducts",
+              "value": "={{ $json.totalProducts }}",
+              "type": "number"
+            },
+            {
+              "id": "a3bd3afc-f525-4a7e-a775-174832732cf9",
+              "name": "totalQuantity",
+              "value": "={{ $json.totalQuantity }}",
+              "type": "number"
+            },
+            {
+              "id": "4822c8f6-cfda-4d23-a875-805e35dc352a",
+              "name": "discountedTotal",
+              "value": "={{ $json.discountedTotal }}",
+              "type": "number"
+            },
+            {
+              "id": "ae02f096-c82c-4d26-b29e-f0e55972322b",
+              "name": "currency",
+              "value": "EUR",
+              "type": "string"
+            },
+            {
+              "id": "d4f25cb4-974d-4475-8a25-8b5a65923da3",
+              "name": "status",
+              "value": "NEW",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        -288
+      ],
+      "id": "0b6bd5de-edca-4d33-b58e-6f6dba918e3f",
+      "name": "04 - Normalize Order"
+    },
+    {
+      "parameters": {
+        "jsCode": "const subtotal = $json.total;\nconst discountedTotal = $json.discountedTotal;\n\nconst discount = subtotal - discountedTotal;\nconst VAT = discountedTotal * 0.19;\nconst finalTotal = discountedTotal + VAT;\n\nreturn {\n  json: {\n    ...$json,\n    subtotal,\n    discount,\n    VAT,\n    finalTotal\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -288
+      ],
+      "id": "7ccdec8f-4adb-4b68-a4fb-befddf77c2a1",
+      "name": "05 - Calculate Order"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rDVUPK1T8N6eSNsHsdODiWqBzzfxMP9KT5DzmPavEac",
+          "mode": "list",
+          "cachedResultName": "AI Order Management Demo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rDVUPK1T8N6eSNsHsdODiWqBzzfxMP9KT5DzmPavEac/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feuille 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rDVUPK1T8N6eSNsHsdODiWqBzzfxMP9KT5DzmPavEac/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Order ID": "={{ $json.id }}",
+            "Customer ID": "={{ $json.userId }}",
+            "Products": "={{ $json.totalProducts }}",
+            "Quantity": "={{ $json.totalQuantity }}",
+            "Discount": "={{ $json.discountedTotal }}",
+            "Subtotal": "={{ $json.subtotal }}",
+            "VAT": "={{ $json.VAT }}",
+            "Total": "={{ $json.total }}",
+            "Currency": "={{ $json.currency }}",
+            "Status": "={{ $json.status }}",
+            "Created At": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Order ID",
+              "displayName": "Order ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer ID",
+              "displayName": "Customer ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Products",
+              "displayName": "Products",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subtotal",
+              "displayName": "Subtotal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Discount",
+              "displayName": "Discount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VAT",
+              "displayName": "VAT",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Total",
+              "displayName": "Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Currency",
+              "displayName": "Currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        -288
+      ],
+      "id": "94cb27e0-c78c-4354-b3de-6885ead7086c",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "bkW5V9ZzxQiihVw9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// NODE 07 - Generate Invoice HTML\n\nconst order = $json;\n\n// Helper for currency formatting\nfunction money(value) {\n  return Number(value || 0).toFixed(2);\n}\n\n// Current date\nconst date = new Date().toLocaleDateString('en-GB');\n\n// Order information\nconst orderReference = order.order_reference || `ORD-${order.order_id}`;\nconst customerId = order.customer_id || 'N/A';\nconst currency = order.currency || 'EUR';\n\nconst subtotal = Number(order.subtotal || 0);\nconst discount = Number(order.discount || 0);\nconst vat = Number(order.vat || 0);\nconst total = Number(order.total || 0);\nconst quantity = Number(order.total_quantity || 0);\n\n// Products\nlet productsHtml = '';\n\nif (Array.isArray(order.products)) {\n  productsHtml = order.products.map(product => `\n    <tr>\n      <td>${product.title || product.name || 'Product'}</td>\n      <td>${product.quantity || 1}</td>\n      <td>${money(product.price)} ${currency}</td>\n      <td>${money(product.total || (product.price * product.quantity))} ${currency}</td>\n    </tr>\n  `).join('');\n} else {\n  productsHtml = `\n    <tr>\n      <td colspan=\"4\" style=\"text-align:center;\">\n        Order contains ${quantity} item(s)\n      </td>\n    </tr>\n  `;\n}\n\n// Generate HTML\nconst html = `\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n\n<title>Order ${orderReference}</title>\n\n<style>\n\n    * {\n        box-sizing: border-box;\n    }\n\n    body {\n        font-family: Arial, Helvetica, sans-serif;\n        background: #f4f6f8;\n        margin: 0;\n        padding: 40px;\n        color: #333;\n    }\n\n    .invoice {\n        width: 800px;\n        margin: auto;\n        background: white;\n        padding: 45px;\n        border-radius: 8px;\n    }\n\n    .header {\n        display: flex;\n        justify-content: space-between;\n        align-items: flex-start;\n        margin-bottom: 40px;\n    }\n\n    .company-name {\n        font-size: 28px;\n        font-weight: bold;\n        color: #222;\n    }\n\n    .company-info {\n        margin-top: 8px;\n        color: #777;\n        font-size: 13px;\n        line-height: 1.6;\n    }\n\n    .invoice-title {\n        text-align: right;\n    }\n\n    .invoice-title h1 {\n        margin: 0;\n        font-size: 32px;\n        color: #222;\n    }\n\n    .invoice-title p {\n        margin: 6px 0;\n        color: #777;\n        font-size: 13px;\n    }\n\n    .customer-section {\n        display: flex;\n        justify-content: space-between;\n        margin-bottom: 35px;\n        padding: 20px;\n        background: #f8f9fa;\n        border-radius: 6px;\n    }\n\n    .section-title {\n        font-weight: bold;\n        margin-bottom: 7px;\n        color: #555;\n        font-size: 13px;\n        text-transform: uppercase;\n    }\n\n    .customer-info {\n        font-size: 14px;\n        line-height: 1.6;\n    }\n\n    table {\n        width: 100%;\n        border-collapse: collapse;\n        margin-bottom: 30px;\n    }\n\n    th {\n        text-align: left;\n        padding: 12px;\n        background: #222;\n        color: white;\n        font-size: 13px;\n    }\n\n    td {\n        padding: 13px 12px;\n        border-bottom: 1px solid #eee;\n        font-size: 13px;\n    }\n\n    .summary {\n        width: 320px;\n        margin-left: auto;\n    }\n\n    .summary-row {\n        display: flex;\n        justify-content: space-between;\n        padding: 8px 0;\n        font-size: 14px;\n    }\n\n    .discount {\n        color: #008000;\n    }\n\n    .total {\n        border-top: 2px solid #222;\n        margin-top: 10px;\n        padding-top: 15px;\n        font-size: 20px;\n        font-weight: bold;\n    }\n\n    .status {\n        display: inline-block;\n        margin-top: 25px;\n        padding: 7px 14px;\n        background: #e8f5e9;\n        color: #2e7d32;\n        border-radius: 20px;\n        font-size: 12px;\n        font-weight: bold;\n    }\n\n    .footer {\n        margin-top: 50px;\n        padding-top: 20px;\n        border-top: 1px solid #eee;\n        text-align: center;\n        color: #888;\n        font-size: 12px;\n        line-height: 1.6;\n    }\n\n</style>\n\n</head>\n\n<body>\n\n<div class=\"invoice\">\n\n    <!-- HEADER -->\n\n    <div class=\"header\">\n\n        <div>\n            <div class=\"company-name\">\n                YOUR COMPANY\n            </div>\n\n            <div class=\"company-info\">\n                123 Business Street<br>\n                Tunis, Tunisia<br>\n                contact@yourcompany.com<br>\n                +216 XX XXX XXX\n            </div>\n        </div>\n\n        <div class=\"invoice-title\">\n\n            <h1>ORDER</h1>\n\n            <p>\n                <strong>${orderReference}</strong>\n            </p>\n\n            <p>\n                Date: ${date}\n            </p>\n\n        </div>\n\n    </div>\n\n\n    <!-- CUSTOMER -->\n\n    <div class=\"customer-section\">\n\n        <div>\n\n            <div class=\"section-title\">\n                Customer\n            </div>\n\n            <div class=\"customer-info\">\n                Customer ID: ${customerId}\n            </div>\n\n        </div>\n\n\n        <div>\n\n            <div class=\"section-title\">\n                Order Status\n            </div>\n\n            <div class=\"customer-info\">\n                ${order.status || 'NEW'}\n            </div>\n\n        </div>\n\n    </div>\n\n\n    <!-- PRODUCTS -->\n\n    <table>\n\n        <thead>\n\n            <tr>\n                <th>Product</th>\n                <th>Quantity</th>\n                <th>Unit Price</th>\n                <th>Total</th>\n            </tr>\n\n        </thead>\n\n        <tbody>\n\n            ${productsHtml}\n\n        </tbody>\n\n    </table>\n\n\n    <!-- SUMMARY -->\n\n    <div class=\"summary\">\n\n        <div class=\"summary-row\">\n\n            <span>Subtotal</span>\n\n            <span>\n                ${money(subtotal)} ${currency}\n            </span>\n\n        </div>\n\n\n        <div class=\"summary-row discount\">\n\n            <span>Discount</span>\n\n            <span>\n                -${money(discount)} ${currency}\n            </span>\n\n        </div>\n\n\n        <div class=\"summary-row\">\n\n            <span>VAT</span>\n\n            <span>\n                ${money(vat)} ${currency}\n            </span>\n\n        </div>\n\n\n        <div class=\"summary-row total\">\n\n            <span>Total</span>\n\n            <span>\n                ${money(total)} ${currency}\n            </span>\n\n        </div>\n\n    </div>\n\n\n    <!-- STATUS -->\n\n    <div class=\"status\">\n\n        ORDER ${order.status || 'NEW'}\n\n    </div>\n\n\n    <!-- FOOTER -->\n\n    <div class=\"footer\">\n\n        Thank you for your order.\n\n        <br>\n\n        This document was automatically generated by our\n        AI-powered order processing system.\n\n        <br><br>\n\n        © ${new Date().getFullYear()} Your Company\n\n    </div>\n\n</div>\n\n</body>\n</html>\n`;\n\n// Return data for the next node\nreturn [\n  {\n    json: {\n      ...order,\n\n      invoice_html: html,\n\n      invoice_filename: `${orderReference}.html`,\n\n      pdf_filename: `${orderReference}.pdf`\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        -288
+      ],
+      "id": "4b830cb1-dcaa-432c-9647-300fb37b97c0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "index.html",
+              "inputDataFieldName": "index.html"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2016,
+        -288
+      ],
+      "id": "79cac49d-9d55-462b-9b37-6a31b6c967cb",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "html",
+        "binaryPropertyName": "index.html",
+        "options": {
+          "fileName": "index.html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1792,
+        -288
+      ],
+      "id": "fb187d5c-eedc-400a-b017-5c173045a40d",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "sendTo": "achref.tirari.97@gmail.com",
+        "subject": "=Your Order   {{ $('04 - Normalize Order').item.json.id }}",
+        "message": "=Hello,  Thank you for your order.  Please find your order confirmation attached.  Order reference: {{ $('Append row in sheet').item.json['Order ID'] }}  Total: {{ $('Append row in sheet').item.json.Total }} {{ $('Append row in sheet').item.json.Currency }}Best regards, Customer Service",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2240,
+        -208
+      ],
+      "id": "960fdd57-6eca-4245-8a44-b6700bafddf8",
+      "name": "Send a message",
+      "webhookId": "a8b18d1f-9fc8-4ce7-b08b-5e60ddf25f15",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "7TgGLKaAl6RVrbW7",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        -208
+      ],
+      "id": "0e7910c5-36ca-43f5-8223-64bfcb1f0850",
+      "name": "Loop Over Items"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "02 - Get  Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - Get  Orders": {
+      "main": [
+        [
+          {
+            "node": "03 - Split Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 - Split Orders": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 - Normalize Order": {
+      "main": [
+        [
+          {
+            "node": "05 - Calculate Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 - Calculate Order": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "04 - Normalize Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bbe7dd5a-fed0-4edd-9233-3c5d015b79bb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0f1a7937d3f5ff65736da9ac9f7985734a63eb997bf2157fa06e67bcb97ef1d"
+  },
+  "nodeGroups": [],
+  "id": "7bDr7wbYBoOZ8ZnQ",
+  "tags": []
+}
